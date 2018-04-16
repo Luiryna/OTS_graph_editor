@@ -1,0 +1,153 @@
+package com.PPVIS.model;
+
+import org.eclipse.swt.widgets.Canvas;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class Graph {
+    private Canvas canvas;
+    private String name;
+    private List<Arc> arcs = new ArrayList<>();
+    private List<Vertex> vertices = new ArrayList<>();
+    private Vertex selectVertex;
+    private Arc selectArc;
+
+    public Graph(String name, Canvas canvas) {
+        this.name = name;
+        this.canvas = canvas;
+    }
+
+    public void addVertex(int x, int y) {
+        if (findVertex(x, y) == null)
+            vertices.add(new Vertex(x, y, canvas));
+    }
+
+    public void addArc(Vertex outgoing, Vertex ingoing) {
+        if (outgoing != null && ingoing != null) {
+            Arc arc = new Arc(outgoing, ingoing, canvas);
+            arcs.add(arc);
+            outgoing.addOutgoing(arc);
+            ingoing.addIngoing(arc);
+        }
+    }
+
+    public Arc addArc(Vertex outgoing, int xIn, int yIn) {
+        if (outgoing != null) {
+            Arc arc = new Arc(outgoing, xIn, yIn, canvas);
+            arcs.add(arc);
+            outgoing.addOutgoing(arc);
+            return arc;
+        }
+        return null;
+    }
+
+    public void delete(Arc arc) {
+        arcs.remove(arc);
+        arc.delete();
+    }
+
+    private void delete(Vertex vertex) {
+        vertices.remove(vertex);
+        for(Arc arc:new ArrayList<>(vertex.getIngoing())) {
+            arc.delete();
+            arcs.remove(arc);
+
+        }
+        for(Arc arc:new ArrayList<>(vertex.getOutgoing())) {
+            arc.delete();
+            arcs.remove(arc);
+        }
+        vertex.delete();
+    }
+
+    public Vertex findVertex(int x, int y) {
+        for (Vertex vertex : vertices) {
+            int x1 = vertex.getX() - x;
+            int y1 = vertex.getY() - y;
+            int r = vertex.getRadius();
+            if (r >= Math.sqrt(x1 * x1 + y1 * y1)) {
+                return vertex;
+            }
+        }
+        return null;
+    }
+
+    public void select(Vertex vertex) {
+        if (selectVertex != null) {
+            selectVertex.deselect();
+        }
+        selectVertex = vertex;
+        if (vertex != null)
+            vertex.select();
+    }
+
+    public Arc findArc(int x, int y) {
+        for (Arc arc : arcs) {
+            int x1 = arc.getOutgoing().getX();
+            int y1 = arc.getOutgoing().getY();
+            int x2 = arc.getIngoing().getX();
+            int y2 = arc.getIngoing().getY();
+            double len1 = Math.sqrt((x - x1) * (x - x1) + (y - y1) * (y - y1));
+            double len2 = Math.sqrt((x2 - x) * (x2 - x) + (y2 - y) * (y2 - y));
+            double len = Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
+            if (len - 0.5 < len1 + len2 && len1 + len2 < len + 0.5) {
+                return arc;
+            }
+        }
+        return null;
+    }
+
+    public void select(Arc arc) {
+        if (selectArc != null) {
+            selectArc.deselect();
+        }
+        selectArc = arc;
+        if (arc != null)
+            arc.select();
+    }
+
+    public Vertex getSelectVertex() {
+        return selectVertex;
+    }
+
+    public Arc getSelectArc() {
+        return selectArc;
+    }
+
+    public void deselectArc() {
+        selectArc.deselect();
+        selectArc = null;
+    }
+
+    public void deselectVertex() {
+        if (selectVertex != null)
+            selectVertex.deselect();
+        selectVertex = null;
+    }
+
+    public void deleteSelected() {
+        if (selectArc != null) {
+            delete(selectArc);
+        }
+        if (selectVertex != null) {
+            delete(selectVertex);
+        }
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public List<Vertex> getVertices() {
+        return vertices;
+    }
+
+    public List<Arc> getArcs() {
+        return arcs;
+    }
+}
