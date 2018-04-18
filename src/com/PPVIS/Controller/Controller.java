@@ -1,15 +1,22 @@
 package com.PPVIS.Controller;
 
 import com.PPVIS.model.Graph;
+import com.PPVIS.model.parser.SAXReader;
 import com.PPVIS.model.parser.WriterXML;
+import org.eclipse.swt.widgets.Canvas;
+import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
 import javax.xml.transform.TransformerException;
 import java.io.File;
+import java.io.IOException;
 
 public class Controller {
     private static Controller controller;
     private WriterXML writerXML;
+    private SAXReader saxReader;
 
     public static synchronized Controller getInstance(){
         if(controller==null)
@@ -31,5 +38,20 @@ public class Controller {
             }
         }
         return false;
+    }
+
+    public Graph open(File file, Canvas canvas){
+        if (saxReader == null) saxReader = new SAXReader();
+        try {
+            saxReader.setCanvas(canvas);
+            SAXParserFactory factory = SAXParserFactory.newInstance();
+            SAXParser parser = factory.newSAXParser();
+            parser.parse(file, saxReader);
+            canvas.redraw();
+            return saxReader.getGraph();
+        } catch (ParserConfigurationException | SAXException | IOException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 }

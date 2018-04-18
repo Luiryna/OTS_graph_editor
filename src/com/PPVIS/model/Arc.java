@@ -4,6 +4,8 @@ package com.PPVIS.model;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.GC;
+import org.eclipse.swt.graphics.Path;
 import org.eclipse.swt.widgets.Canvas;
 
 import java.util.concurrent.atomic.AtomicLong;
@@ -11,7 +13,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class Arc {
     private static AtomicLong atomicLong = new AtomicLong();
     private long ID;
-    private int weight=1;
+    private int weight = 1;
     private Vertex ingoing;
     private Vertex outgoing;
     private boolean isOriented;
@@ -24,10 +26,12 @@ public class Arc {
     private PaintListener paintListener;
 
 
-    protected Arc(Vertex outgoing, Vertex ingoing, Canvas canvas) {
-        ID=atomicLong.incrementAndGet();
+    public Arc(Vertex outgoing, Vertex ingoing, Canvas canvas) {
+        ID = atomicLong.incrementAndGet();
         this.ingoing = ingoing;
         this.outgoing = outgoing;
+        outgoing.addOutgoing(this);
+        ingoing.addIngoing(this);
         isOriented = true;
         this.canvas = canvas;
         defaultColor = black;
@@ -35,15 +39,16 @@ public class Arc {
         canvas.redraw();
     }
 
-    protected Arc(Vertex outgoing, int x, int y, Canvas canvas) {
-        ID=atomicLong.incrementAndGet();
+    public Arc(Vertex outgoing, int x, int y, Canvas canvas) {
+        ID = atomicLong.incrementAndGet();
         this.outgoing = outgoing;
+        outgoing.addOutgoing(this);
         isOriented = true;
         this.canvas = canvas;
         defaultColor = black;
         xIn = x;
         yIn = y;
-        defaultColor=black;
+        defaultColor = black;
         draw();
         canvas.redraw();
     }
@@ -59,22 +64,61 @@ public class Arc {
                 int r = Vertex.getRadius();
                 paintEvent.gc.setForeground(defaultColor);
                 paintEvent.gc.setLineWidth(3);
-                if (ingoing == null)
-                    paintEvent.gc.drawLine(x1, y1, xIn, yIn);
-                else
-                    paintEvent.gc.drawLine(x1, y1, ingoing.getX(), ingoing.getY());
+                int x3, y3;
+                if (ingoing == null) {
+                    if (x1 != x2) {
+                        x3 = x1 < x2 ? (int) (x1 + r * Math.sqrt(1 / (Math.pow(((y1 - y2) / (x1 - x2)), 2) + 1))) : (int) (x1 - r * Math.sqrt(1 / (Math.pow(((y1 - y2) / (x1 - x2)), 2) + 1)));
+                        y3 = y1 < y2 ? (int) (y1 + r * Math.sqrt(1 - 1 / (Math.pow((y1 - y2) / (x1 - x2), 2) + 1))) : (int) (y1 - r * Math.sqrt(1 - 1 / (Math.pow((y1 - y2) / (x1 - x2), 2) + 1)));
+                    } else {
+                        x3 = x1;
+                        y3 = y1 > y2 ? y1 - r : y1 + r;
+                    }
+                    paintEvent.gc.drawLine(x3, y3, xIn, yIn);
+                    if (isOriented)
+                        drawArrow(paintEvent.gc, x3, y3, xIn, yIn, 8, 120);
+                } else {
+                    int x4, y4;
+                    double sqrtX, sqrtY;
+                    if (x1 != x2) {
+                        sqrtX = Math.sqrt(1 / (Math.pow(((y1 - y2) / (x1 - x2)), 2) + 1)) * r;
+                        sqrtY = Math.sqrt(1 - 1 / (Math.pow((y1 - y2) / (x1 - x2), 2) + 1)) * r;
+                        x3 = x1 < x2 ? (int) (x1 + sqrtX) : (int) (x1 - sqrtX);
+                        y3 = y1 < y2 ? (int) (y1 + sqrtY) : (int) (y1 - sqrtY);
+                        x4 = x1 < x2 ? (int) (x2 - sqrtX) : (int) (x2 + sqrtX);
+                        y4 = y1 < y2 ? (int) (y2 - sqrtY) : (int) (y2 + sqrtY);
+                    } else {
+                        x3 = x1;
+                        y3 = y1 > y2 ? y1 - r : y1 + r;
+                        x4 = x2;
+                        y4 = y1 > y2 ? y2 + r : y2 - r;
+                    }
+                    paintEvent.gc.drawLine(x3, y3, x4, y4);
+                    if (isOriented)
+                        drawArrow(paintEvent.gc, x3, y3, x4, y4, 8, 120);
+                }
             }
         };
         canvas.addPaintListener(paintListener);
     }
 
+    public void drawArrow(GC gc, int x1, int y1, int x2, int y2, double arrowLength, double arrowAngle) {
+        double theta = Math.atan2(y2 - y1, x2 - x1);
+        Path path = new Path(gc.getDevice());
+        path.moveTo((float) (x2 - arrowLength * Math.cos(theta - arrowAngle)), (float) (y2 - arrowLength * Math.sin(theta - arrowAngle)));
+        path.lineTo((float) x2, (float) y2);
+        path.lineTo((float) (x2 - arrowLength * Math.cos(theta + arrowAngle)), (float) (y2 - arrowLength * Math.sin(theta + arrowAngle)));
+        path.close();
+        gc.drawPath(path);
+        path.dispose();
+    }
+
     public void select() {
-        defaultColor =green;
+        defaultColor = green;
         canvas.redraw();
     }
 
     public void deselect() {
-        defaultColor =black;
+        defaultColor = black;
         canvas.redraw();
     }
 
@@ -92,11 +136,6 @@ public class Arc {
         if (ingoing != null)
             ingoing.delIngoing(this);
         outgoing.delOutgoing(this);
-    }
-
-    public void deleteArc(){
-        canvas.removePaintListener(paintListener);
-        canvas.redraw();
     }
 
     public void setXY(int xIn, int yIn) {
@@ -119,6 +158,7 @@ public class Arc {
 
     public void setOriented(boolean oriented) {
         isOriented = oriented;
+        canvas.redraw();
     }
 
     public int getWeight() {
@@ -132,4 +172,16 @@ public class Arc {
     public long getID() {
         return ID;
     }
+
+    public void setID(long ID) {
+        this.ID = ID;
+    }
+
+    public void changeOrientation() {
+        Vertex temp = ingoing;
+        ingoing = outgoing;
+        outgoing = temp;
+        canvas.redraw();
+    }
+
 }

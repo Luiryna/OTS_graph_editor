@@ -24,7 +24,7 @@ public class Vertex {
     private Color black = new Color(null, 0, 0, 0);
     private PaintListener paintListener;
 
-    protected Vertex(int x, int y, Canvas canvas) {
+    public Vertex(int x, int y, Canvas canvas) {
         ID = atomicLong.incrementAndGet();
         this.x = x;
         this.y = y;
@@ -120,5 +120,9 @@ public class Vertex {
 
     public long getID() {
         return ID;
+    }
+
+    public void setID(long ID) {
+        this.ID = ID;
     }
 }

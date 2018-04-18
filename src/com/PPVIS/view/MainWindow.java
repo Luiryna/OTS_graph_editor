@@ -15,11 +15,14 @@ import org.eclipse.swt.widgets.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 
 public class MainWindow {
     private Display display;
     private Shell shell;
     private Color defaultColor;
+    private Menu arcMenu;
+    private Menu vertexMenu;
     private Canvas canvas;
     private TypeOperation typeOperation;
     private Graph graph;
@@ -40,6 +43,13 @@ public class MainWindow {
         initMenuBar();
         initToolBar();
         initCanvas();
+        vertexMenuCanvas();
+        arcMenuCanvas();
+//        TabFolder tabFolder= new TabFolder(shell,SWT.BORDER);
+//        TabItem tabItem = new TabItem(tabFolder,SWT.NULL);
+//        TabItem tabItem2 = new TabItem(tabFolder,SWT.NULL);
+//        tabItem.setControl(canvas);
+
         graph = new Graph("graph1", canvas);
         shell.open();
         while (!shell.isDisposed()) {
@@ -101,6 +111,34 @@ public class MainWindow {
                 }
             }
         });
+
+        MenuItem menuItemOpen = new MenuItem(fileMenuDrop, SWT.PUSH);
+        menuItemOpen.setText("Open");
+        menuItemOpen.setAccelerator(SWT.CTRL + 'O');
+        menuItemOpen.addSelectionListener(new SelectionAdapter() {
+            MessageBox messageBox = new MessageBox(shell);
+
+            @Override
+            public void widgetSelected(SelectionEvent selectionEvent) {
+                File file;
+                try {
+                    file = new File(openFileDialog("Open"));
+                } catch (NullPointerException ex) {
+                    return;
+                }
+                if (graph != null)
+                    for (Vertex vertex : new ArrayList<>(graph.getVertices()))
+                        graph.delete(vertex);
+                Graph graph = Controller.getInstance().open(file, canvas);
+                if (graph == null) {
+                    messageBox.setMessage("Ошибка чтения");
+                    messageBox.open();
+                } else {
+                    MainWindow.this.graph = graph;
+                    canvas.redraw();
+                }
+            }
+        });
     }
 
     private void initToolBar() {
@@ -149,29 +187,42 @@ public class MainWindow {
         canvas.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseDoubleClick(MouseEvent mouseEvent) {
-                if (typeOperation == TypeOperation.ADD_VERTEX) {
+                if (typeOperation == TypeOperation.ADD_VERTEX && mouseEvent.button == 1) {
                     graph.addVertex(mouseEvent.x, mouseEvent.y);
                 }
             }
 
             @Override
             public void mouseDown(MouseEvent mouseEvent) {
-                if (typeOperation == TypeOperation.CLICK) {
+                if(mouseEvent.button==3){
                     graph.select(graph.findVertex(mouseEvent.x, mouseEvent.y));
-                    if (graph.getSelectVertex() == null)
+                    if (graph.getSelectVertex() == null) {
                         graph.select(graph.findArc(mouseEvent.x, mouseEvent.y));
-                    else hasSelectVertex = true;
+                        if(graph.getSelectArc() != null)
+                            canvas.setMenu(arcMenu);
+                    }
+                    else {
+                        canvas.setMenu(vertexMenu);
+                    }
                 } else {
-                    if (typeOperation == TypeOperation.ADD_ARC) {
-                        outgoing = graph.findVertex(mouseEvent.x, mouseEvent.y);
-                        if (outgoing != null)
-                            arcCreate = graph.addArc(outgoing, outgoing.getX(), outgoing.getY());
+                    if (typeOperation == TypeOperation.CLICK) {
+                        graph.select(graph.findVertex(mouseEvent.x, mouseEvent.y));
+                        if (graph.getSelectVertex() == null)
+                            graph.select(graph.findArc(mouseEvent.x, mouseEvent.y));
+                        else hasSelectVertex = true;
+                    } else {
+                        if (typeOperation == TypeOperation.ADD_ARC) {
+                            outgoing = graph.findVertex(mouseEvent.x, mouseEvent.y);
+                            if (outgoing != null)
+                                arcCreate = graph.addArc(outgoing, outgoing.getX(), outgoing.getY());
+                        }
                     }
                 }
             }
 
             @Override
             public void mouseUp(MouseEvent mouseEvent) {
+                canvas.setMenu(null);
                 if (typeOperation == TypeOperation.CLICK) {
                     hasSelectVertex = false;
                 } else {
@@ -196,9 +247,8 @@ public class MainWindow {
                 if (typeOperation == TypeOperation.CLICK) {
                     Rectangle rect = canvas.getBounds();
                     if (hasSelectVertex) {
-//                    if (rect.x + rect.width >= mouseEvent.x + Vertex.getRadius() && rect.y + rect.height >= Vertex.getRadius() + mouseEvent.y
-//                            && mouseEvent.x - Vertex.getRadius() >= rect.x && mouseEvent.y - Vertex.getRadius() >= rect.y)
-                        graph.getSelectVertex().move(mouseEvent.x, mouseEvent.y);
+                        if (rect.y - 40 <= mouseEvent.y && rect.x <= mouseEvent.x && rect.x + rect.width - 23 >= mouseEvent.x && rect.y + rect.height - 80 >= mouseEvent.y)
+                            graph.getSelectVertex().move(mouseEvent.x, mouseEvent.y);
                     }
                 } else {
                     if (typeOperation == TypeOperation.ADD_ARC) {
@@ -219,6 +269,7 @@ public class MainWindow {
                 if (keyEvent.keyCode == 105) {
                     if (graph.getSelectVertex() != null)
                         new NameVertexWindow(display, graph.getSelectVertex());
+//                    if (graph.getSelectArc() != null)
                     return;
                 }
                 if (keyEvent.keyCode == 49) {
@@ -233,9 +284,74 @@ public class MainWindow {
                     typeOperation = TypeOperation.ADD_ARC;
                     return;
                 }
+                if (keyEvent.keyCode == 115) {
+                    if (graph.getSelectArc() != null)
+                        graph.getSelectArc().changeOrientation();
+                    return;
+                }
             }
         });
+    }
 
+    private void vertexMenuCanvas() {
+        Menu menu = new Menu(shell, SWT.POP_UP);
+
+        MenuItem setTextItem = new MenuItem(menu, SWT.PUSH);
+        setTextItem.setText("Set text");
+
+        setTextItem.addListener(SWT.Selection, event -> {
+            new NameVertexWindow(display, graph.getSelectVertex());
+        });
+
+        MenuItem delItem = new MenuItem(menu, SWT.PUSH);
+        delItem.setText("Delete");
+
+        delItem.addListener(SWT.Selection, event -> {
+            graph.deleteSelected();
+        });
+
+        vertexMenu = menu;
+    }
+
+    private void arcMenuCanvas() {
+        Menu menu = new Menu(shell, SWT.POP_UP);
+
+        MenuItem setTextItem = new MenuItem(menu, SWT.PUSH);
+        setTextItem.setText("Set weight");
+
+        setTextItem.addListener(SWT.Selection, event -> {
+//            new NameVertexWindow(display, graph.getSelectVertex());
+        });
+
+        MenuItem changeItem = new MenuItem(menu,SWT.PUSH);
+        changeItem.setText("Change orientation");
+
+        changeItem.addListener(SWT.Selection, event -> {
+            graph.getSelectArc().changeOrientation();
+        });
+
+        MenuItem deleteOrientationItem = new MenuItem(menu,SWT.PUSH);
+        deleteOrientationItem.setText("Set unoriented");
+
+        deleteOrientationItem.addListener(SWT.Selection, event -> {
+            graph.getSelectArc().setOriented(false);
+        });
+
+        MenuItem setOrientedItem = new MenuItem(menu,SWT.PUSH);
+        setOrientedItem.setText("Set oriented");
+
+        setOrientedItem.addListener(SWT.Selection, event -> {
+            graph.getSelectArc().setOriented(true);
+        });
+
+        MenuItem delItem = new MenuItem(menu, SWT.PUSH);
+        delItem.setText("Delete");
+
+        delItem.addListener(SWT.Selection, event -> {
+            graph.deleteSelected();
+        });
+
+        arcMenu = menu;
     }
 
     private String openFileDialog(String type) {

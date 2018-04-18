@@ -23,20 +23,27 @@ public class Graph {
             vertices.add(new Vertex(x, y, canvas));
     }
 
+    public void addVertex(Vertex vertex) {
+        if (vertex != null)
+            vertices.add(vertex);
+    }
+
     public void addArc(Vertex outgoing, Vertex ingoing) {
         if (outgoing != null && ingoing != null) {
             Arc arc = new Arc(outgoing, ingoing, canvas);
             arcs.add(arc);
-            outgoing.addOutgoing(arc);
-            ingoing.addIngoing(arc);
         }
+    }
+
+    public void addArc(Arc arc) {
+        if (arc != null)
+            arcs.add(arc);
     }
 
     public Arc addArc(Vertex outgoing, int xIn, int yIn) {
         if (outgoing != null) {
             Arc arc = new Arc(outgoing, xIn, yIn, canvas);
             arcs.add(arc);
-            outgoing.addOutgoing(arc);
             return arc;
         }
         return null;
@@ -47,14 +54,14 @@ public class Graph {
         arc.delete();
     }
 
-    private void delete(Vertex vertex) {
+    public void delete(Vertex vertex) {
         vertices.remove(vertex);
-        for(Arc arc:new ArrayList<>(vertex.getIngoing())) {
+        for (Arc arc : new ArrayList<>(vertex.getIngoing())) {
             arc.delete();
             arcs.remove(arc);
 
         }
-        for(Arc arc:new ArrayList<>(vertex.getOutgoing())) {
+        for (Arc arc : new ArrayList<>(vertex.getOutgoing())) {
             arc.delete();
             arcs.remove(arc);
         }
@@ -77,6 +84,8 @@ public class Graph {
         if (selectVertex != null) {
             selectVertex.deselect();
         }
+        if (selectArc != null)
+            selectArc.deselect();
         selectVertex = vertex;
         if (vertex != null)
             vertex.select();
@@ -102,6 +111,8 @@ public class Graph {
         if (selectArc != null) {
             selectArc.deselect();
         }
+        if (selectVertex != null)
+            selectVertex.deselect();
         selectArc = arc;
         if (arc != null)
             arc.select();
