@@ -31,6 +31,9 @@ public class Controller {
             try {
                 writerXML.setFile(file);
                 writerXML.setGraph(graph);
+                String name = file.getName().substring(0, file.getName().indexOf('.'));
+                if(!name.equals(graph.getName()))
+                    graph.setName(name);
                 writerXML.write();
                 return true;
             } catch (TransformerException | ParserConfigurationException e) {

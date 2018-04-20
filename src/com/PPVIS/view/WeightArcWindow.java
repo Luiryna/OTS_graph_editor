@@ -1,9 +1,8 @@
 package com.PPVIS.view;
 
+import com.PPVIS.model.Arc;
 import com.PPVIS.model.Vertex;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.KeyAdapter;
-import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Color;
@@ -12,14 +11,13 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
 
-
-public class NameVertexWindow {
+public class WeightArcWindow {
     private Display display;
     private Shell shell;
-    private Vertex vertex;
+    private Arc arc;
     private Color defaultColor;
 
-    public NameVertexWindow(Display display, Vertex vertex, int x, int y) {
+    public WeightArcWindow(Display display, Arc arc, int x, int y) {
         this.display = display;
         this.shell = new Shell(display);
         GridLayout gridLayout = new GridLayout();
@@ -27,13 +25,13 @@ public class NameVertexWindow {
         gridLayout.numColumns = 2;
         defaultColor = new Color(null, 255, 247, 247);
         shell.setLayout(gridLayout);
-        shell.setText("Add name");
+        shell.setText("Add weight");
         shell.setImage(new Image(display, "img/iconLogo.png"));
+        shell.setLocation(x,y);
         shell.setSize(200, 150);
         shell.setModified(false);
         shell.setBackground(defaultColor);
-        shell.setLocation(x,y);
-        this.vertex = vertex;
+        this.arc = arc;
         initWindow();
         shell.setFocus();
         shell.open();
@@ -41,7 +39,7 @@ public class NameVertexWindow {
 
     private void initWindow() {
         Label labelSurname = new Label(shell, SWT.NULL);
-        labelSurname.setText("Название");
+        labelSurname.setText("Вес");
         labelSurname.setBackground(defaultColor);
 
         Text name = new Text(shell, SWT.SINGLE | SWT.BORDER);
@@ -57,8 +55,10 @@ public class NameVertexWindow {
             @Override
             public void widgetSelected(SelectionEvent selectionEvent) {
                 if (!name.getText().equals("")) {
-                    vertex.setName(name.getText());
-                    shell.close();
+                    try {
+                        arc.setWeight(Integer.parseInt(name.getText()));
+                        shell.close();
+                    } catch (NumberFormatException ex){}
                 }
             }
         });

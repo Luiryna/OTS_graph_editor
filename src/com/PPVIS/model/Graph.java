@@ -18,6 +18,7 @@ public class Graph {
         this.canvas = canvas;
     }
 
+
     public void addVertex(int x, int y) {
         if (findVertex(x, y) == null)
             vertices.add(new Vertex(x, y, canvas));
@@ -161,4 +162,9 @@ public class Graph {
     public List<Arc> getArcs() {
         return arcs;
     }
+
+    public Canvas getCanvas() {
+        return canvas;
+    }
+
 }

@@ -1,6 +1,7 @@
 package com.PPVIS.view;
 
 import com.PPVIS.Controller.Controller;
+import com.PPVIS.Main;
 import com.PPVIS.model.Arc;
 import com.PPVIS.model.Graph;
 import com.PPVIS.model.TypeOperation;
@@ -8,6 +9,7 @@ import com.PPVIS.model.Vertex;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -15,14 +17,17 @@ import org.eclipse.swt.widgets.*;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class MainWindow {
     private Display display;
     private Shell shell;
+    private TabFolder tabFolder;
     private Color defaultColor;
     private Menu arcMenu;
     private Menu vertexMenu;
+    private Map<TabItem, Graph> mapTabItem = new HashMap<>();
     private Canvas canvas;
     private TypeOperation typeOperation;
     private Graph graph;
@@ -39,18 +44,23 @@ public class MainWindow {
         shell.setSize(1920, 1080);
         shell.setBackground(defaultColor);
         shell.setText("GraphEditor");
+        shell.setImage(new Image(display, "img/iconLogo.png"));
         initLayout();
         initMenuBar();
         initToolBar();
-        initCanvas();
         vertexMenuCanvas();
         arcMenuCanvas();
-//        TabFolder tabFolder= new TabFolder(shell,SWT.BORDER);
-//        TabItem tabItem = new TabItem(tabFolder,SWT.NULL);
-//        TabItem tabItem2 = new TabItem(tabFolder,SWT.NULL);
-//        tabItem.setControl(canvas);
-
-        graph = new Graph("graph1", canvas);
+        tabFolder = new TabFolder(shell, SWT.BORDER);
+        GridData gridDataTab = new GridData(SWT.FILL, SWT.FILL, true, true);
+        gridDataTab.grabExcessHorizontalSpace = true;
+        tabFolder.setLayoutData(gridDataTab);
+        initMenuTab();
+        tabFolder.addSelectionListener(new SelectionAdapter() {
+            public void widgetSelected(SelectionEvent event) {
+                if (mapTabItem.size() != 0)
+                    changeTab(tabFolder.getSelection()[0]);
+            }
+        });
         shell.open();
         while (!shell.isDisposed()) {
             if (!display.readAndDispatch()) {
@@ -58,6 +68,49 @@ public class MainWindow {
             }
         }
         display.dispose();
+    }
+
+    public void addTab(String name) {
+        TabItem tabItem = new TabItem(tabFolder, SWT.NULL);
+        initCanvas();
+        tabItem.setControl(canvas);
+        Graph graph = new Graph(name, canvas);
+        this.graph = graph;
+        mapTabItem.put(tabItem, graph);
+        tabItem.setText(graph.getName());
+        typeOperation = TypeOperation.CLICK;
+        hasSelectVertex = false;
+        ingoing = null;
+        outgoing = null;
+        arcCreate = null;
+        tabFolder.setSelection(tabItem);
+
+    }
+
+    public void addTab(Graph graph) {
+        TabItem tabItem = new TabItem(tabFolder, SWT.NULL);
+        tabItem.setControl(canvas);
+        this.graph = graph;
+        mapTabItem.put(tabItem, graph);
+        tabItem.setText(graph.getName());
+        typeOperation = TypeOperation.CLICK;
+        hasSelectVertex = false;
+        ingoing = null;
+        outgoing = null;
+        arcCreate = null;
+        tabFolder.setSelection(tabItem);
+    }
+
+    private void changeTab(TabItem tabItem) {
+        if (tabItem != null) {
+            graph = mapTabItem.get(tabItem);
+            typeOperation = TypeOperation.CLICK;
+            hasSelectVertex = false;
+            ingoing = null;
+            outgoing = null;
+            arcCreate = null;
+            canvas = graph.getCanvas();
+        }
     }
 
     private void initLayout() {
@@ -81,9 +134,20 @@ public class MainWindow {
         Menu fileMenuDrop = new Menu(shell, SWT.DROP_DOWN);
         fileMenu.setMenu(fileMenuDrop);
 
+        MenuItem menuItemAdd = new MenuItem(fileMenuDrop, SWT.PUSH);
+        menuItemAdd.setText("Add graph");
+        menuItemAdd.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent selectionEvent) {
+                Rectangle rectangle = shell.getBounds();
+                new GraphWindow(display, MainWindow.this, (rectangle.x + rectangle.width) / 2, (rectangle.y + rectangle.height) / 2);
+            }
+        });
+
         MenuItem saveItem = new MenuItem(fileMenuDrop, SWT.PUSH);
         saveItem.setText("Save");
         saveItem.setAccelerator(SWT.CTRL + 'S');
+
         saveItem.addSelectionListener(new SelectionAdapter() {
             MessageBox messageBox = new MessageBox(shell);
 
@@ -91,7 +155,9 @@ public class MainWindow {
             public void widgetSelected(SelectionEvent selectionEvent) {
                 File file;
                 try {
-                    file = new File(openFileDialog("Save"));
+                    FileDialog fileDialog = openFileDialog("Save");
+                    fileDialog.setFileName(graph.getName());
+                    file = new File(fileDialog.open());
                 } catch (NullPointerException ex) {
                     return;
                 }
@@ -106,6 +172,7 @@ public class MainWindow {
                     messageBox.setMessage("Ошибка при сохранении");
                     messageBox.open();
                 } else {
+                    tabFolder.getItem(tabFolder.getSelectionIndex()).setText(file.getName().substring(0, file.getName().indexOf('.')));
                     messageBox.setMessage("Сохранено");
                     messageBox.open();
                 }
@@ -122,20 +189,72 @@ public class MainWindow {
             public void widgetSelected(SelectionEvent selectionEvent) {
                 File file;
                 try {
-                    file = new File(openFileDialog("Open"));
+                    FileDialog fileDialog = openFileDialog("Open");
+                    file = new File(fileDialog.open());
                 } catch (NullPointerException ex) {
                     return;
                 }
-                if (graph != null)
-                    for (Vertex vertex : new ArrayList<>(graph.getVertices()))
-                        graph.delete(vertex);
-                Graph graph = Controller.getInstance().open(file, canvas);
+                Canvas canvas = MainWindow.this.canvas;
+                initCanvas();
+                Graph graph = Controller.getInstance().open(file, MainWindow.this.canvas);
                 if (graph == null) {
                     messageBox.setMessage("Ошибка чтения");
                     messageBox.open();
+                    MainWindow.this.canvas = canvas;
                 } else {
-                    MainWindow.this.graph = graph;
-                    canvas.redraw();
+                    addTab(graph);
+                    graph.getCanvas().redraw();
+                }
+            }
+        });
+
+        MenuItem menuItemExit = new MenuItem(fileMenuDrop, SWT.PUSH);
+        menuItemExit.setText("Exit");
+        menuItemExit.addListener(SWT.Selection, event -> {
+            shell.close();
+            display.dispose();
+        });
+
+        MenuItem menuItemEdit = new MenuItem(menuBar, SWT.CASCADE);
+        menuItemEdit.setText("Edit");
+
+        Menu menuEdit = new Menu(shell, SWT.DROP_DOWN);
+        menuItemEdit.setMenu(menuEdit);
+
+        MenuItem menuItemClick = new MenuItem(menuEdit, SWT.PUSH);
+        menuItemClick.setText("Click");
+        menuItemClick.addListener(SWT.Selection, event -> {
+            typeOperation = TypeOperation.CLICK;
+        });
+
+        MenuItem menuItemAddVertex = new MenuItem(menuEdit, SWT.PUSH);
+        menuItemAddVertex.setText("Add vertex");
+        menuItemAddVertex.addListener(SWT.Selection, event -> {
+            typeOperation = TypeOperation.ADD_VERTEX;
+        });
+
+        MenuItem menuItemAddArc = new MenuItem(menuEdit, SWT.PUSH);
+        menuItemAddArc.setText("Add arc");
+        menuItemAddArc.addListener(SWT.Selection, event -> {
+            typeOperation = TypeOperation.ADD_ARC;
+        });
+
+        MenuItem menuItemInfo = new MenuItem(menuBar, SWT.CASCADE);
+        menuItemInfo.setText("Info");
+
+        Menu menuInfo = new Menu(shell, SWT.DROP_DOWN);
+        menuItemInfo.setMenu(menuInfo);
+
+        MenuItem menuItemInfoGraph = new MenuItem(menuInfo, SWT.PUSH);
+        menuItemInfoGraph.setText("Info graph");
+        menuItemInfoGraph.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent selectionEvent) {
+                if (graph != null) {
+                    MessageBox messageBox = new MessageBox(shell, SWT.OK);
+                    messageBox.setText("Info graph");
+                    messageBox.setMessage("Graph name " + graph.getName() + '\n' + "Arcs " + graph.getArcs().size() + '\n' + "Vertices " + graph.getVertices().size());
+                    messageBox.open();
                 }
             }
         });
@@ -179,7 +298,7 @@ public class MainWindow {
     }
 
     private void initCanvas() {
-        canvas = new Canvas(shell, SWT.NO_REDRAW_RESIZE | SWT.DOUBLE_BUFFERED);
+        canvas = new Canvas(tabFolder, SWT.NO_REDRAW_RESIZE | SWT.DOUBLE_BUFFERED);
         GridData gridDataCanvas = new GridData(SWT.FILL, SWT.FILL, true, true);
         gridDataCanvas.grabExcessHorizontalSpace = true;
         canvas.setLayoutData(gridDataCanvas);
@@ -194,14 +313,13 @@ public class MainWindow {
 
             @Override
             public void mouseDown(MouseEvent mouseEvent) {
-                if(mouseEvent.button==3){
+                if (mouseEvent.button == 3) {
                     graph.select(graph.findVertex(mouseEvent.x, mouseEvent.y));
                     if (graph.getSelectVertex() == null) {
                         graph.select(graph.findArc(mouseEvent.x, mouseEvent.y));
-                        if(graph.getSelectArc() != null)
+                        if (graph.getSelectArc() != null)
                             canvas.setMenu(arcMenu);
-                    }
-                    else {
+                    } else {
                         canvas.setMenu(vertexMenu);
                     }
                 } else {
@@ -247,7 +365,7 @@ public class MainWindow {
                 if (typeOperation == TypeOperation.CLICK) {
                     Rectangle rect = canvas.getBounds();
                     if (hasSelectVertex) {
-                        if (rect.y - 40 <= mouseEvent.y && rect.x <= mouseEvent.x && rect.x + rect.width - 23 >= mouseEvent.x && rect.y + rect.height - 80 >= mouseEvent.y)
+                        if (rect.y - 25  <= mouseEvent.y && rect.x <= mouseEvent.x && rect.x + rect.width - 15 >= mouseEvent.x && rect.y + rect.height - 50 >= mouseEvent.y)
                             graph.getSelectVertex().move(mouseEvent.x, mouseEvent.y);
                     }
                 } else {
@@ -261,15 +379,16 @@ public class MainWindow {
         canvas.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent keyEvent) {
-                System.out.println(keyEvent.keyCode);
                 if (keyEvent.keyCode == 127) {
                     graph.deleteSelected();
                     return;
                 }
                 if (keyEvent.keyCode == 105) {
+                    Rectangle rectangle = canvas.getBounds();
                     if (graph.getSelectVertex() != null)
-                        new NameVertexWindow(display, graph.getSelectVertex());
-//                    if (graph.getSelectArc() != null)
+                        new NameVertexWindow(display, graph.getSelectVertex(), (rectangle.x + rectangle.width) / 2, (rectangle.y + rectangle.height) / 2);
+                    if (graph.getSelectArc() != null)
+                        new WeightArcWindow(display, graph.getSelectArc(), (rectangle.x + rectangle.width) / 2, (rectangle.y + rectangle.height) / 2);
                     return;
                 }
                 if (keyEvent.keyCode == 49) {
@@ -289,6 +408,10 @@ public class MainWindow {
                         graph.getSelectArc().changeOrientation();
                     return;
                 }
+                if (keyEvent.keyCode == 99) {
+                    if (graph.getSelectArc() != null)
+                        graph.getSelectArc().setOriented(!graph.getSelectArc().isOriented());
+                }
             }
         });
     }
@@ -300,7 +423,8 @@ public class MainWindow {
         setTextItem.setText("Set text");
 
         setTextItem.addListener(SWT.Selection, event -> {
-            new NameVertexWindow(display, graph.getSelectVertex());
+            Rectangle rectangle = shell.getBounds();
+            new NameVertexWindow(display, graph.getSelectVertex(), (rectangle.x + rectangle.width) / 2, (rectangle.y + rectangle.height) / 2);
         });
 
         MenuItem delItem = new MenuItem(menu, SWT.PUSH);
@@ -320,24 +444,25 @@ public class MainWindow {
         setTextItem.setText("Set weight");
 
         setTextItem.addListener(SWT.Selection, event -> {
-//            new NameVertexWindow(display, graph.getSelectVertex());
+            Rectangle rectangle = shell.getBounds();
+            new WeightArcWindow(display, graph.getSelectArc(), (rectangle.x + rectangle.width) / 2, (rectangle.y + rectangle.height) / 2);
         });
 
-        MenuItem changeItem = new MenuItem(menu,SWT.PUSH);
+        MenuItem changeItem = new MenuItem(menu, SWT.PUSH);
         changeItem.setText("Change orientation");
 
         changeItem.addListener(SWT.Selection, event -> {
             graph.getSelectArc().changeOrientation();
         });
 
-        MenuItem deleteOrientationItem = new MenuItem(menu,SWT.PUSH);
+        MenuItem deleteOrientationItem = new MenuItem(menu, SWT.PUSH);
         deleteOrientationItem.setText("Set unoriented");
 
         deleteOrientationItem.addListener(SWT.Selection, event -> {
             graph.getSelectArc().setOriented(false);
         });
 
-        MenuItem setOrientedItem = new MenuItem(menu,SWT.PUSH);
+        MenuItem setOrientedItem = new MenuItem(menu, SWT.PUSH);
         setOrientedItem.setText("Set oriented");
 
         setOrientedItem.addListener(SWT.Selection, event -> {
@@ -354,14 +479,46 @@ public class MainWindow {
         arcMenu = menu;
     }
 
-    private String openFileDialog(String type) {
-        FileDialog fileDialog = new FileDialog(shell, SWT.SAVE);
+    private void initMenuTab() {
+        Menu menu = new Menu(shell, SWT.POP_UP);
+
+        MenuItem setTextItem = new MenuItem(menu, SWT.PUSH);
+        setTextItem.setText("Add");
+
+        setTextItem.addListener(SWT.Selection, event -> {
+            Rectangle rectangle = shell.getBounds();
+            new GraphWindow(display, MainWindow.this, (rectangle.x + rectangle.width) / 2, (rectangle.y + rectangle.height) / 2);
+        });
+
+        MenuItem delItem = new MenuItem(menu, SWT.PUSH);
+        delItem.setText("Delete");
+
+        delItem.addListener(SWT.Selection, event -> {
+            TabItem tabItem = tabFolder.getSelection()[0];
+            mapTabItem.remove(tabItem);
+            canvas = null;
+            graph = null;
+            typeOperation = TypeOperation.CLICK;
+            hasSelectVertex = false;
+            ingoing = null;
+            outgoing = null;
+            arcCreate = null;
+            tabItem.dispose();
+            if (mapTabItem.size() > 0)
+                changeTab(tabFolder.getItem(0));
+        });
+        tabFolder.setMenu(menu);
+
+    }
+
+    private FileDialog openFileDialog(String type) {
+        FileDialog fileDialog = new FileDialog(shell, "Save".equals(type) ? SWT.SAVE : SWT.OPEN);
         fileDialog.setText(type);
         fileDialog.setFilterPath("C:/");
         String[] filterExst = new String[1];
         filterExst[0] = "*.xml";
         fileDialog.setFilterExtensions(filterExst);
-        return fileDialog.open();
+        return fileDialog;
     }
 
 }

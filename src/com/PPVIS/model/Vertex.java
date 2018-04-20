@@ -122,7 +122,4 @@ public class Vertex {
         return ID;
     }
 
-    public void setID(long ID) {
-        this.ID = ID;
-    }
 }

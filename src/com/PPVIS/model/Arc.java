@@ -73,9 +73,7 @@ public class Arc {
                         x3 = x1;
                         y3 = y1 > y2 ? y1 - r : y1 + r;
                     }
-                    paintEvent.gc.drawLine(x3, y3, xIn, yIn);
-                    if (isOriented)
-                        drawArrow(paintEvent.gc, x3, y3, xIn, yIn, 8, 120);
+                    drawArrow(paintEvent.gc, x3, y3, xIn, yIn, 8, 120);
                 } else {
                     int x4, y4;
                     double sqrtX, sqrtY;
@@ -92,9 +90,7 @@ public class Arc {
                         x4 = x2;
                         y4 = y1 > y2 ? y2 + r : y2 - r;
                     }
-                    paintEvent.gc.drawLine(x3, y3, x4, y4);
-                    if (isOriented)
-                        drawArrow(paintEvent.gc, x3, y3, x4, y4, 8, 120);
+                    drawArrow(paintEvent.gc, x3, y3, x4, y4, 8, 120);
                 }
             }
         };
@@ -102,14 +98,21 @@ public class Arc {
     }
 
     public void drawArrow(GC gc, int x1, int y1, int x2, int y2, double arrowLength, double arrowAngle) {
+        gc.drawLine(x1, y1, x2, y2);
         double theta = Math.atan2(y2 - y1, x2 - x1);
-        Path path = new Path(gc.getDevice());
-        path.moveTo((float) (x2 - arrowLength * Math.cos(theta - arrowAngle)), (float) (y2 - arrowLength * Math.sin(theta - arrowAngle)));
-        path.lineTo((float) x2, (float) y2);
-        path.lineTo((float) (x2 - arrowLength * Math.cos(theta + arrowAngle)), (float) (y2 - arrowLength * Math.sin(theta + arrowAngle)));
-        path.close();
-        gc.drawPath(path);
-        path.dispose();
+        if (isOriented) {
+            Path path = new Path(gc.getDevice());
+            path.moveTo((float) (x2 - arrowLength * Math.cos(theta - arrowAngle)), (float) (y2 - arrowLength * Math.sin(theta - arrowAngle)));
+            path.lineTo((float) x2, (float) y2);
+            path.lineTo((float) (x2 - arrowLength * Math.cos(theta + arrowAngle)), (float) (y2 - arrowLength * Math.sin(theta + arrowAngle)));
+            path.close();
+            gc.drawPath(path);
+            path.dispose();
+        }
+        if (x1 > x2)
+            gc.drawText(String.valueOf(weight), (int) ((x1 + x2) / 2 - 10 * Math.cos(theta + 90)), (int) ((y1 + y2) / 2 - 10 * Math.sin(theta + 90)));
+        else
+            gc.drawText(String.valueOf(weight), (int) ((x1 + x2) / 2 - 10 * Math.cos(theta - 90)), (int) ((y1 + y2) / 2 - 10 * Math.sin(theta - 90)));
     }
 
     public void select() {
@@ -167,20 +170,21 @@ public class Arc {
 
     public void setWeight(int weight) {
         this.weight = weight;
+        canvas.redraw();
     }
 
     public long getID() {
         return ID;
     }
 
-    public void setID(long ID) {
-        this.ID = ID;
-    }
-
     public void changeOrientation() {
         Vertex temp = ingoing;
+        ingoing.delIngoing(this);
+        outgoing.delOutgoing(this);
         ingoing = outgoing;
         outgoing = temp;
+        ingoing.addIngoing(this);
+        outgoing.addOutgoing(this);
         canvas.redraw();
     }
 

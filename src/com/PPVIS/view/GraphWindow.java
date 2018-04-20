@@ -1,9 +1,6 @@
 package com.PPVIS.view;
 
-import com.PPVIS.model.Vertex;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.KeyAdapter;
-import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Color;
@@ -12,14 +9,13 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
 
-
-public class NameVertexWindow {
+public class GraphWindow {
     private Display display;
     private Shell shell;
-    private Vertex vertex;
     private Color defaultColor;
+    private MainWindow mainWindow;
 
-    public NameVertexWindow(Display display, Vertex vertex, int x, int y) {
+    public GraphWindow(Display display,MainWindow mainWindow, int x, int y) {
         this.display = display;
         this.shell = new Shell(display);
         GridLayout gridLayout = new GridLayout();
@@ -27,21 +23,21 @@ public class NameVertexWindow {
         gridLayout.numColumns = 2;
         defaultColor = new Color(null, 255, 247, 247);
         shell.setLayout(gridLayout);
-        shell.setText("Add name");
-        shell.setImage(new Image(display, "img/iconLogo.png"));
+        shell.setText("Add graph");
         shell.setSize(200, 150);
         shell.setModified(false);
+        shell.setImage(new Image(display, "img/iconLogo.png"));
         shell.setBackground(defaultColor);
         shell.setLocation(x,y);
-        this.vertex = vertex;
         initWindow();
+        this.mainWindow = mainWindow;
         shell.setFocus();
         shell.open();
     }
 
     private void initWindow() {
         Label labelSurname = new Label(shell, SWT.NULL);
-        labelSurname.setText("Название");
+        labelSurname.setText("Имя графа");
         labelSurname.setBackground(defaultColor);
 
         Text name = new Text(shell, SWT.SINGLE | SWT.BORDER);
@@ -57,7 +53,7 @@ public class NameVertexWindow {
             @Override
             public void widgetSelected(SelectionEvent selectionEvent) {
                 if (!name.getText().equals("")) {
-                    vertex.setName(name.getText());
+                    mainWindow.addTab(name.getText());
                     shell.close();
                 }
             }
