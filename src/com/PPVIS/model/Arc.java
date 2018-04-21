@@ -110,9 +110,9 @@ public class Arc {
             path.dispose();
         }
         if (x1 > x2)
-            gc.drawText(String.valueOf(weight), (int) ((x1 + x2) / 2 - 10 * Math.cos(theta + 90)), (int) ((y1 + y2) / 2 - 10 * Math.sin(theta + 90)));
+            gc.drawText(String.valueOf(weight), (int) ((x1 + x2) / 2 - 10 * Math.cos(theta + 90)), (int) ((y1 + y2) / 2 - 10 * Math.sin(theta + 90)),true);
         else
-            gc.drawText(String.valueOf(weight), (int) ((x1 + x2) / 2 - 10 * Math.cos(theta - 90)), (int) ((y1 + y2) / 2 - 10 * Math.sin(theta - 90)));
+            gc.drawText(String.valueOf(weight), (int) ((x1 + x2) / 2 - 10 * Math.cos(theta - 90)), (int) ((y1 + y2) / 2 - 10 * Math.sin(theta - 90)), true);
     }
 
     public void select() {
@@ -185,7 +185,8 @@ public class Arc {
         outgoing = temp;
         ingoing.addIngoing(this);
         outgoing.addOutgoing(this);
-        canvas.redraw();
+        if (isOriented)
+            canvas.redraw();
     }
 
 }

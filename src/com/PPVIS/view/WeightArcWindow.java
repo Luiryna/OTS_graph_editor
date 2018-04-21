@@ -1,7 +1,6 @@
 package com.PPVIS.view;
 
 import com.PPVIS.model.Arc;
-import com.PPVIS.model.Vertex;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;

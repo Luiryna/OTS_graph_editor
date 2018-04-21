@@ -1,4 +1,4 @@
-package com.PPVIS.Controller;
+package com.PPVIS.controller;
 
 import com.PPVIS.model.Graph;
 import com.PPVIS.model.parser.SAXReader;

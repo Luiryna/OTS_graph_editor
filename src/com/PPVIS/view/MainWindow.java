@@ -1,6 +1,7 @@
 package com.PPVIS.view;
 
-import com.PPVIS.Controller.Controller;
+import com.PPVIS.algoritm.Algorithm;
+import com.PPVIS.controller.Controller;
 import com.PPVIS.Main;
 import com.PPVIS.model.Arc;
 import com.PPVIS.model.Graph;
@@ -35,6 +36,7 @@ public class MainWindow {
     private Vertex outgoing;
     private Arc arcCreate;
     private boolean hasSelectVertex = false;
+    private Vertex start;
 
     public MainWindow() {
         display = new Display();
@@ -110,6 +112,7 @@ public class MainWindow {
             outgoing = null;
             arcCreate = null;
             canvas = graph.getCanvas();
+            start = null;
         }
     }
 
@@ -239,6 +242,35 @@ public class MainWindow {
             typeOperation = TypeOperation.ADD_ARC;
         });
 
+        MenuItem menuItemAlgo = new MenuItem(menuBar, SWT.CASCADE);
+        menuItemAlgo.setText("Algorithm");
+
+        Menu menuAlgo = new Menu(shell, SWT.DROP_DOWN);
+        menuItemAlgo.setMenu(menuAlgo);
+
+        MenuItem menuItemFindShort = new MenuItem(menuAlgo, SWT.CASCADE);
+        menuItemFindShort.setText("Distance");
+
+        Menu menuFindShort = new Menu(shell, SWT.DROP_DOWN);
+        menuItemFindShort.setMenu(menuFindShort);
+
+        MenuItem menuItemStart = new MenuItem(menuFindShort, SWT.PUSH);
+        menuItemStart.setText("Start vertex");
+        menuItemStart.addListener(SWT.Selection, event -> {
+            typeOperation = TypeOperation.ADD_START_VERTEX;
+        });
+
+        MenuItem menuItemFind = new MenuItem(menuFindShort, SWT.PUSH);
+        menuItemFind.setText("Find");
+        menuItemFind.addListener(SWT.Selection, event -> {
+            if (start != null && graph != null) {
+                Map<Vertex, Integer> map = Algorithm.findDistance(graph, start);
+                for (Map.Entry<Vertex, Integer> entry : map.entrySet()) {
+                    entry.getKey().setDistance(map.get(entry.getKey()));
+                }
+            }
+        });
+
         MenuItem menuItemInfo = new MenuItem(menuBar, SWT.CASCADE);
         menuItemInfo.setText("Info");
 
@@ -313,6 +345,12 @@ public class MainWindow {
 
             @Override
             public void mouseDown(MouseEvent mouseEvent) {
+                if (start != null) {
+                    start.deselect();
+                    for (Vertex vertex : graph.getVertices())
+                        vertex.setDistance(-1);
+                    start = null;
+                }
                 if (mouseEvent.button == 3) {
                     graph.select(graph.findVertex(mouseEvent.x, mouseEvent.y));
                     if (graph.getSelectVertex() == null) {
@@ -333,6 +371,11 @@ public class MainWindow {
                             outgoing = graph.findVertex(mouseEvent.x, mouseEvent.y);
                             if (outgoing != null)
                                 arcCreate = graph.addArc(outgoing, outgoing.getX(), outgoing.getY());
+                        } else {
+                            if (typeOperation == TypeOperation.ADD_START_VERTEX) {
+                                start = graph.findVertex(mouseEvent.x, mouseEvent.y);
+                                if (start != null) start.setDefaultColor(new Color(null, 255, 10, 10));
+                            }
                         }
                     }
                 }
@@ -365,7 +408,7 @@ public class MainWindow {
                 if (typeOperation == TypeOperation.CLICK) {
                     Rectangle rect = canvas.getBounds();
                     if (hasSelectVertex) {
-                        if (rect.y - 25  <= mouseEvent.y && rect.x <= mouseEvent.x && rect.x + rect.width - 15 >= mouseEvent.x && rect.y + rect.height - 50 >= mouseEvent.y)
+                        if (rect.y - 25 <= mouseEvent.y && rect.x <= mouseEvent.x && rect.x + rect.width - 15 >= mouseEvent.x && rect.y + rect.height - 50 >= mouseEvent.y)
                             graph.getSelectVertex().move(mouseEvent.x, mouseEvent.y);
                     }
                 } else {
@@ -503,6 +546,7 @@ public class MainWindow {
             ingoing = null;
             outgoing = null;
             arcCreate = null;
+            start = null;
             tabItem.dispose();
             if (mapTabItem.size() > 0)
                 changeTab(tabFolder.getItem(0));

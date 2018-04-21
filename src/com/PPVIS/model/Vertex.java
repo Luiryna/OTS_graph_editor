@@ -14,9 +14,10 @@ public class Vertex {
     private long ID;
     private Canvas canvas;
     private static int radius = 10;
-    private String name="";
+    private String name = "";
     private int x;
     private int y;
+    private int distance = -1;
     private List<Arc> ingoing;
     private List<Arc> outgoing;
     private Color defaultColor;
@@ -31,7 +32,7 @@ public class Vertex {
         this.canvas = canvas;
         ingoing = new ArrayList<>();
         outgoing = new ArrayList<>();
-        defaultColor =black;
+        defaultColor = black;
         draw();
         canvas.redraw();
     }
@@ -43,26 +44,40 @@ public class Vertex {
                 paintEvent.gc.setForeground(defaultColor);
                 paintEvent.gc.setLineWidth(5);
                 paintEvent.gc.drawOval(x - radius, y - radius, radius * 2, radius * 2);
-                paintEvent.gc.drawText(name,x+radius, y+radius);
+                paintEvent.gc.drawText(name, x + radius, y + radius);
+                if (distance != -1) {
+                    paintEvent.gc.setForeground(new Color(null, 10,10,255));
+                    paintEvent.gc.drawText(String.valueOf(distance), x + 2*radius, y - 2*radius);
+                }
             }
         };
         canvas.addPaintListener(paintListener);
     }
 
-    public void move(int x, int y){
+    public void setDefaultColor(Color defaultColor) {
+        this.defaultColor = defaultColor;
+        canvas.redraw();
+    }
+
+    public void move(int x, int y) {
         defaultColor = green;
-        this.x=x;
+        this.x = x;
         this.y = y;
         canvas.redraw();
     }
 
     public void select() {
-        defaultColor =green;
+        defaultColor = green;
+        canvas.redraw();
+    }
+
+    public void setDistance(int distance) {
+        this.distance = distance;
         canvas.redraw();
     }
 
     public void deselect() {
-        defaultColor =black;
+        defaultColor = black;
         canvas.redraw();
     }
 
@@ -78,7 +93,7 @@ public class Vertex {
         return y;
     }
 
-    public void delete(){
+    public void delete() {
         ingoing.clear();
         outgoing.clear();
         canvas.removePaintListener(paintListener);
