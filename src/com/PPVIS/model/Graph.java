@@ -4,6 +4,7 @@ import org.eclipse.swt.widgets.Canvas;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class Graph {
@@ -181,5 +182,16 @@ public class Graph {
         }
         return matrix;
     }
+
+//    public void findHamiltonianCycle() {
+//        List<Vertex> tempArrayVertex = vertices;
+//        for (int i = 0; i < vertices.size(); i++) {
+//            Vertex current = tempArrayVertex.get(i);
+//            Vertex next = tempArrayVertex.get(i + 1);
+//            if (arcs.stream().anyMatch(t -> ((t.getIngoing().getID() == current.getID()) && (t.getOutgoing().getID() == next.getID())) || ((t.getOutgoing().getID() == current.getID()) && (t.getIngoing().getID() == next.getID())))) {
+//
+//            }
+//        }
+//    }
 
 }

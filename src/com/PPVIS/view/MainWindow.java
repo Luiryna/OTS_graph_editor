@@ -3,10 +3,7 @@ package com.PPVIS.view;
 import com.PPVIS.algoritm.Algorithm;
 import com.PPVIS.controller.Controller;
 import com.PPVIS.Main;
-import com.PPVIS.model.Arc;
-import com.PPVIS.model.Graph;
-import com.PPVIS.model.TypeOperation;
-import com.PPVIS.model.Vertex;
+import com.PPVIS.model.*;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.Color;
@@ -306,6 +303,10 @@ public class MainWindow {
                         }
                         matrixString = matrixString.concat("\n");
                     }
+                    matrixString = matrixString.concat("Диаметр графа:\n");
+                    matrixString = matrixString.concat("Радиус графа: \n");
+                    HamiltonianCycle cycle = new HamiltonianCycle();
+                    cycle.findHamiltonianCycle(matrix);
                     messageBox.setText("Матрица смежности");
                     messageBox.setMessage(matrixString);
                     messageBox.open();
