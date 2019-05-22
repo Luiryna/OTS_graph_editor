@@ -2,6 +2,7 @@ package com.PPVIS.model;
 
 import org.eclipse.swt.widgets.Canvas;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,7 +18,6 @@ public class Graph {
         this.name = name;
         this.canvas = canvas;
     }
-
 
     public void addVertex(int x, int y) {
         if (findVertex(x, y) == null)
@@ -165,6 +165,21 @@ public class Graph {
 
     public Canvas getCanvas() {
         return canvas;
+    }
+
+    public int[][] getAdjacencyMatrix() {
+        int[][] matrix = new int[vertices.size()][vertices.size()];
+        for (int i = 0; i < vertices.size(); i++) {
+            for (int j = 0; j < vertices.size(); j++) {
+                final int indexJ = j;
+                final int indexI = i;
+                if(arcs.stream().anyMatch(t -> (t.getOutgoing().getID() == vertices.get(indexI).getID()) && (t.getIngoing().getID() == vertices.get(indexJ).getID()))) {
+                    matrix[i][j] = 1;
+                }
+                else { matrix[i][j] = 0; }
+            }
+        }
+        return matrix;
     }
 
 }

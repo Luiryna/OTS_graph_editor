@@ -290,6 +290,28 @@ public class MainWindow {
                 }
             }
         });
+
+        MenuItem menuItemInfoMatrice = new MenuItem(menuInfo, SWT.PUSH);
+        menuItemInfoMatrice.setText("Матрица смежности");
+        menuItemInfoMatrice.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent selectionEvent) {
+                if (graph != null) {
+                    MessageBox messageBox = new MessageBox(shell, SWT.OK);
+                    int[][] matrix = graph.getAdjacencyMatrix();
+                    String matrixString = "";
+                    for (int i  = 0; i < matrix.length; i++) {
+                        for (int j = 0; j < matrix[0].length; j++) {
+                            matrixString = matrixString.concat(Integer.toString(matrix[i][j]));
+                        }
+                        matrixString = matrixString.concat("\n");
+                    }
+                    messageBox.setText("Матрица смежности");
+                    messageBox.setMessage(matrixString);
+                    messageBox.open();
+                }
+            }
+        });
     }
 
     private void initToolBar() {
