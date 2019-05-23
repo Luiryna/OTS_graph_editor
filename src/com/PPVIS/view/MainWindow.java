@@ -313,6 +313,50 @@ public class MainWindow {
                 }
             }
         });
+
+        MenuItem menuItemHamiltonianCycle = new MenuItem(menuInfo, SWT.PUSH);
+        menuItemHamiltonianCycle.setText("Найти гамильтонов цикл");
+        menuItemHamiltonianCycle.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent selectionEvent) {
+                if (graph != null) {
+                    MessageBox messageBox = new MessageBox(shell, SWT.OK);
+                    int[][] matrix = graph.getAdjacencyMatrix();
+                    HamiltonianCycle cycle = new HamiltonianCycle();
+                    messageBox.setText("Гамильтонов цикл");
+                    messageBox.setMessage(cycle.findHamiltonianCycle(matrix));
+                    messageBox.open();
+                }
+            }
+        });
+
+        MenuItem createSvyaznyGraph = new MenuItem(menuInfo, SWT.PUSH);
+        createSvyaznyGraph.setText("Привести граф к связному");
+        createSvyaznyGraph.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent selectionEvent) {
+                if (graph != null) {
+                    for (int i = 0; i < graph.getVertices().size(); i++) {
+                        Vertex vertex = graph.getVertices().get(i);
+                        Vertex next;
+                        if (i != graph.getVertices().size() - 1) {
+                            next = graph.getVertices().get(i + 1);
+                        } else {
+                            next = graph.getVertices().get(0);
+                        }
+                        if (graph.getArcs().stream().anyMatch(t -> (t.getIngoing().getID() == vertex.getID()) && (t.getOutgoing().getID() == next.getID()))) {
+
+                        } else {
+                            graph.addArc(vertex, next);
+                        }
+                    }
+                    MessageBox messageBox = new MessageBox(shell, SWT.OK);
+                    messageBox.setText("Преобразование графа к связному");
+                    messageBox.setMessage("Граф преобразован");
+                    messageBox.open();
+                }
+            }
+        });
     }
 
     private void initToolBar() {
@@ -390,6 +434,7 @@ public class MainWindow {
                             graph.select(graph.findArc(mouseEvent.x, mouseEvent.y));
                         else hasSelectVertex = true;
                     } else {
+//                        вот тут добавляется ребро
                         if (typeOperation == TypeOperation.ADD_ARC) {
                             outgoing = graph.findVertex(mouseEvent.x, mouseEvent.y);
                             if (outgoing != null)

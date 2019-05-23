@@ -10,7 +10,7 @@ public class HamiltonianCycle {
     /**
      * Function to find cycle
      **/
-    public void findHamiltonianCycle(int[][] g) {
+    public String findHamiltonianCycle(int[][] g) {
         V = g.length;
         path = new int[V];
         Arrays.fill(path, -1);
@@ -19,10 +19,11 @@ public class HamiltonianCycle {
             path[0] = 0;
             pathCount = 1;
             solve(0);
-            System.out.println("No solution");
+//            System.out.println("No solution");
+            return "No solution";
         } catch (Exception e) {
             System.out.println(e.getMessage());
-            display();
+            return display();
         }
     }
 
@@ -69,10 +70,14 @@ public class HamiltonianCycle {
     /**
      * display solution
      **/
-    public void display() {
-        System.out.print("\nPath : ");
+    public String display() {
+        String output = "";
+        output = output.concat("\nPath : ");
+//        System.out.print("\nPath : ");
         for (int i = 0; i <= V; i++)
-            System.out.print(path[i % V] + " ");
-        System.out.println();
+//            System.out.print(path[i % V] + " ");
+            output = output.concat(path[i % V] + " ");
+//        System.out.println();
+        return output;
     }
 }
