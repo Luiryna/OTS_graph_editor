@@ -1,4 +1,5 @@
 package com.PPVIS.view;
+import com.PPVIS.model.Product;
 
 import com.PPVIS.algoritm.Algorithm;
 import com.PPVIS.controller.Controller;
@@ -15,6 +16,8 @@ import org.eclipse.swt.widgets.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -357,6 +360,51 @@ public class MainWindow {
                 }
             }
         });
+
+        MenuItem openTwoGraphs = new MenuItem(menuInfo, SWT.PUSH);
+        openTwoGraphs.setText("Открыть два графа для произведения");
+        openTwoGraphs.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent selectionEvent) {
+                FileDialog dlg = new FileDialog(shell, SWT.MULTI);
+                Collection files = new ArrayList();
+                if (dlg.open() != null) {
+                    String[] names = dlg.getFileNames();
+                    Canvas canvas = MainWindow.this.canvas;
+                    initCanvas();
+                    File file1 = new File(names[0]);
+                    File file2 = new File(names[1]);
+                    Graph first = Controller.getInstance().open(file1, MainWindow.this.canvas);
+                    Graph second = Controller.getInstance().open(file2, MainWindow.this.canvas);
+                    Product product = new Product(first, second);
+                    graph = product.createCopyGraph();
+                    addTab(graph);
+                    graph.getCanvas().redraw();
+
+//                    for (int i = 0, n = names.length; i < n; i++) {
+//                        StringBuffer buf = new StringBuffer(dlg.getFilterPath());
+//                        if (buf.charAt(buf.length() - 1) != File.separatorChar)
+//                            buf.append(File.separatorChar);
+//                        buf.append(names[i]);
+//                        files.add(buf.toString());
+//                    }
+
+                }
+            }
+        });
+
+//        MenuItem createCartesianProduct = new MenuItem(menuInfo, SWT.PUSH);
+//        createCartesianProduct.setText("Декартово произведение графа");
+//        createCartesianProduct.addSelectionListener(new SelectionAdapter() {
+//            @Override
+//            public void widgetSelected(SelectionEvent selectionEvent) {
+//                Product product = new Product();
+//                Graph cartesianProduct = product.cartesianProduct(graph, graph);
+//                graph = cartesianProduct;
+//                System.out.println(cartesianProduct);
+//            }
+//
+//        });
     }
 
     private void initToolBar() {

@@ -6,6 +6,7 @@ import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class Graph {
     private Canvas canvas;
@@ -14,6 +15,11 @@ public class Graph {
     private List<Vertex> vertices = new ArrayList<>();
     private Vertex selectVertex;
     private Arc selectArc;
+
+
+    public Graph(String name) {
+        this.name = name;
+    }
 
     public Graph(String name, Canvas canvas) {
         this.name = name;
@@ -181,5 +187,14 @@ public class Graph {
             }
         }
         return matrix;
+    }
+
+    public Arc getArc(Vertex ingoing, Vertex outgoing) {
+        for (int i = 0; i < arcs.size(); i++) {
+            if ((arcs.get(i).getIngoing().getID() == ingoing.getID()) && (arcs.get(i).getOutgoing().getID() == outgoing.getID())) {
+                return arcs.get(i);
+            }
+        }
+        return null;
     }
 }

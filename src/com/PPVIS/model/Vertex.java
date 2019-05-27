@@ -24,7 +24,9 @@ public class Vertex {
     private Color green = new Color(null, 29, 216, 23);
     private Color black = new Color(null, 0, 0, 0);
     private PaintListener paintListener;
+    public Vertex() {
 
+    }
     public Vertex(int x, int y, Canvas canvas) {
         ID = atomicLong.incrementAndGet();
         this.x = x;
