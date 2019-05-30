@@ -188,6 +188,128 @@ public class Graph {
         }
         return matrix;
     }
+    
+     public int getRadius() {
+        int[][] matrix = new int[vertices.size()][vertices.size()];
+        for (int i = 0; i < vertices.size(); i++) {
+            for (int j = 0; j < vertices.size(); j++) {
+                final int indexJ = j;
+                final int indexI = i;
+                if(arcs.stream().anyMatch(t -> (t.getOutgoing().getID() == vertices.get(indexI).getID()) && (t.getIngoing().getID() == vertices.get(indexJ).getID()))) {
+                    matrix[i][j] = 1;
+                }
+                else { matrix[i][j] = 0; }
+            }
+        }
+
+        int[][] edge = new int[vertices.size()][vertices.size()];
+        for (int i = 0; i < vertices.size(); i++)
+            for (int j = 0; j < vertices.size(); j++) {
+                edge[i][j] = matrix[i][j];
+                if (edge[i][j] == 0)
+                    edge[i][j] = 100000;//машинная бесконечность
+            }//Находим кратчайшие расстояния между всеми парами вершин
+        for (int k = 0; k < vertices.size(); k++)           //алгоритм Флойда
+            for (int i = 0; i < vertices.size(); i++)
+                for (int j = 0; j < vertices.size(); j++)
+                    if (i != j)
+                        edge[i][j] = Math.min(edge[i][j], edge[i][k] + edge[k][j]);
+
+
+        int radius = 100000, max, diameter = -1;
+        int[] ecc = new int[vertices.size()];
+        int[] rad = new int[vertices.size()];
+        for (int i = 0; i < vertices.size(); i++) {
+            rad[i] = ecc[i] = 0;
+            max = -1;
+            for (int j = 0; j < vertices.size(); j++) {
+                if (i!=j)
+                {
+                    if(edge[i][j] > max)//если ребро > max
+                    {
+                        max = edge[i][j];//то max присваиваем значение ребра
+                    }
+                    if(edge[i][j] > diameter)//если ребро > диаметра
+                        diameter = edge[i][j];//то диаметру присваиваем значение ребра
+                }
+            }
+            ecc[i] = max;    //расстояние от этой (т.е. от центра) вершины до самой удаленной
+            if (max<radius)
+            {
+                radius  = max; // присваиваем значение радиусу
+            }
+        }//Если эксцентриситет вершины равен радиусу графа то эта вершина центр графа, выводим её.
+        int j = 0;   //кол-во вершин центра
+        for(int i = 0; i < vertices.size(); i++)
+        {
+            if(radius == ecc[i])
+                rad[j++] = i;
+        }
+        System.out.println(radius);
+
+        return radius;
+    }
+
+    public int getDiameter() {
+        int[][] matrix = new int[vertices.size()][vertices.size()];
+        for (int i = 0; i < vertices.size(); i++) {
+            for (int j = 0; j < vertices.size(); j++) {
+                final int indexJ = j;
+                final int indexI = i;
+                if(arcs.stream().anyMatch(t -> (t.getOutgoing().getID() == vertices.get(indexI).getID()) && (t.getIngoing().getID() == vertices.get(indexJ).getID()))) {
+                    matrix[i][j] = 1;
+                }
+                else { matrix[i][j] = 0; }
+            }
+        }
+
+        int[][] edge = new int[vertices.size()][vertices.size()];
+        for (int i = 0; i < vertices.size(); i++)
+            for (int j = 0; j < vertices.size(); j++) {
+                edge[i][j] = matrix[i][j];
+                if (edge[i][j] == 0)
+                    edge[i][j] = 100000;//машинная бесконечность
+            }//Находим кратчайшие расстояния между всеми парами вершин
+        for (int k = 0; k < vertices.size(); k++)           //алгоритм Флойда
+            for (int i = 0; i < vertices.size(); i++)
+                for (int j = 0; j < vertices.size(); j++)
+                    if (i != j)
+                        edge[i][j] = Math.min(edge[i][j], edge[i][k] + edge[k][j]);
+
+
+        int radius = 100000, max, diameter = -1;
+        int[] ecc = new int[vertices.size()];
+        int[] rad = new int[vertices.size()];
+        for (int i = 0; i < vertices.size(); i++) {
+            rad[i] = ecc[i] = 0;
+            max = -1;
+            for (int j = 0; j < vertices.size(); j++) {
+                if (i!=j)
+                {
+                    if(edge[i][j] > max)//если ребро > max
+                    {
+                        max = edge[i][j];//то max присваиваем значение ребра
+                    }
+                    if(edge[i][j] > diameter)//если ребро > диаметра
+                        diameter = edge[i][j];//то диаметру присваиваем значение ребра
+                }
+            }
+            ecc[i] = max;    //расстояние от этой (т.е. от центра) вершины до самой удаленной
+            if (max<radius)
+            {
+                radius  = max; // присваиваем значение радиусу
+            }
+        }//Если эксцентриситет вершины равен радиусу графа то эта вершина центр графа, выводим её.
+        int j = 0;   //кол-во вершин центра
+        for(int i = 0; i < vertices.size(); i++)
+        {
+            if(radius == ecc[i])
+                rad[j++] = i;
+        }
+        System.out.println(diameter);
+
+        return diameter;
+    }
 
     public Arc getArc(Vertex ingoing, Vertex outgoing) {
         for (int i = 0; i < arcs.size(); i++) {
