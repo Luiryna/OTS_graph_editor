@@ -300,6 +300,8 @@ public class MainWindow {
                     MessageBox messageBox = new MessageBox(shell, SWT.OK);
                     int[][] matrix = graph.getAdjacencyMatrix();
                     String matrixString = "";
+                    int diameter = graph.getDiameter();
+                    int radius = graph.getRadius();
                     for (int i  = 0; i < matrix.length; i++) {
                         for (int j = 0; j < matrix[0].length; j++) {
                             matrixString = matrixString.concat(Integer.toString(matrix[i][j]));
