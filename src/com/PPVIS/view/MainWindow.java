@@ -318,6 +318,28 @@ public class MainWindow {
                 }
             }
         });
+        
+        MenuItem menuRadiusDiameter = new MenuItem(menuInfo, SWT.PUSH);
+        menuRadiusDiameter.setText("Радиус и диаметр графа");
+        menuRadiusDiameter.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent selectionEvent) {
+                if (graph != null) {
+                    MessageBox messageBox = new MessageBox(shell, SWT.OK);
+                    int[][] matrix = graph.getAdjacencyMatrix();
+                    //String matrixString = "";
+                    int diameter = graph.getDiameter();
+                    int radius = graph.getRadius();
+                    //matrixString = matrixString.concat("Диаметр графа:\n");
+                    //matrixString = matrixString.concat("Радиус графа: \n");
+                    HamiltonianCycle cycle = new HamiltonianCycle();
+                    cycle.findHamiltonianCycle(matrix);
+                    messageBox.setText("Радиус и диаметр графа");
+                    messageBox.setMessage("Радиус графа: " + radius + "\n" + "Диаметр графа: " + diameter );
+                    messageBox.open();
+                }
+            }
+        });
 
         MenuItem menuItemHamiltonianCycle = new MenuItem(menuInfo, SWT.PUSH);
         menuItemHamiltonianCycle.setText("Найти гамильтонов цикл");
@@ -363,38 +385,7 @@ public class MainWindow {
             }
         });
 
-        MenuItem openTwoGraphs = new MenuItem(menuInfo, SWT.PUSH);
-        openTwoGraphs.setText("Открыть два графа для произведения");
-        openTwoGraphs.addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetSelected(SelectionEvent selectionEvent) {
-                FileDialog dlg = new FileDialog(shell, SWT.MULTI);
-                Collection files = new ArrayList();
-                if (dlg.open() != null) {
-                    String[] names = dlg.getFileNames();
-                    Canvas canvas = MainWindow.this.canvas;
-                    initCanvas();
-                    File file1 = new File(names[0]);
-                    File file2 = new File(names[1]);
-                    Graph first = Controller.getInstance().open(file1, MainWindow.this.canvas);
-                    Graph second = Controller.getInstance().open(file2, MainWindow.this.canvas);
-                    Product product = new Product(first, second);
-                    graph = product.createCopyGraph();
-                    addTab(graph);
-                    graph.getCanvas().redraw();
-
-//                    for (int i = 0, n = names.length; i < n; i++) {
-//                        StringBuffer buf = new StringBuffer(dlg.getFilterPath());
-//                        if (buf.charAt(buf.length() - 1) != File.separatorChar)
-//                            buf.append(File.separatorChar);
-//                        buf.append(names[i]);
-//                        files.add(buf.toString());
-//                    }
-
-                }
-            }
-        });
-
+       
 //        MenuItem createCartesianProduct = new MenuItem(menuInfo, SWT.PUSH);
 //        createCartesianProduct.setText("Декартово произведение графа");
 //        createCartesianProduct.addSelectionListener(new SelectionAdapter() {
